@@ -39,8 +39,9 @@ namespace ContactAppNLayer.Api.Controllers
         }
 
         [HttpPut("{id:guid}")]
-        public async Task<IActionResult> Update(Guid id, UpdateContactRequest request)
+        public async Task<IActionResult> Update(Guid id, [FromBody]UpdateContactRequest request)
         {
+            
             var updated = await _service.UpdateAsync(id, request);
             return updated == null ? NotFound() : Ok(updated);
         }
@@ -49,7 +50,10 @@ namespace ContactAppNLayer.Api.Controllers
         public async Task<IActionResult> Delete(Guid id)
         {
             var result = await _service.DeleteAsync(id);
-            return result ? Ok("Deleted Successfully") : NotFound();
+            return result
+            ? Ok(new { message = "Deleted Successfully" })
+            : NotFound(new { message = "Contact Not Found" });
+
         }
     }
 }
