@@ -16,5 +16,7 @@ namespace ContactAppNLayer.DataAccess
             : base(options) { }
 
         public DbSet<Contact> Contacts { get; set; }
+
+        public DbSet<User> Users { get; set; }
     }
 }
