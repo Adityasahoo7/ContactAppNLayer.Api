@@ -5,6 +5,7 @@ using ContactAppNLayer.Services.Interfaces;
 using Microsoft.AspNetCore.Mvc;
 using ContactAppNLayer.Models.DTOs;
 using Microsoft.AspNetCore.Authorization;
+using System.Security.Claims;
 
 namespace ContactAppNLayer.Api.Controllers
 {
@@ -23,7 +24,14 @@ namespace ContactAppNLayer.Api.Controllers
         [HttpGet]
         public async Task<IActionResult> GetAll()
         {
-            return Ok(await _service.GetAllAsync());
+            // return Ok(await _service.GetAllAsync());
+
+            var username = User.Identity?.Name;
+            var role = User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.Role)?.Value;
+
+            var result = await _service.GetAllAsync(username, role);
+            return Ok(result);
+
         }
 
 
@@ -41,7 +49,8 @@ namespace ContactAppNLayer.Api.Controllers
         [HttpPost]
         public async Task<IActionResult> Add(AddContactRequest request)
         {
-            var added = await _service.AddAsync(request);
+            var username = User.Identity?.Name;
+            var added = await _service.AddAsync(request,username!);
             return Ok(added);
         }
 

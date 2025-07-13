@@ -20,10 +20,16 @@ namespace ContactAppNLayer.Services.Implementations
             _repository = repository;
         }
 
-        public async Task<List<ContactDto>> GetAllAsync()
+        public async Task<List<ContactDto>> GetAllAsync(string username, string role)
         {
-            var contacts = await _repository.GetAllAsync();
-            return contacts.Select(c => new ContactDto
+            var allContacts = await _repository.GetAllAsync();
+
+            // Role-based filtering
+            var filteredContacts = role == "Admin"
+                ? allContacts
+                : allContacts.Where(c => c.CreatedBy == username);
+
+            return filteredContacts.Select(c => new ContactDto
             {
                 Id = c.Id,
                 Fullname = c.Fullname,
@@ -32,6 +38,7 @@ namespace ContactAppNLayer.Services.Implementations
                 Address = c.Address
             }).ToList();
         }
+
 
         public async Task<ContactDto?> GetByIdAsync(Guid id)
         {
@@ -46,14 +53,15 @@ namespace ContactAppNLayer.Services.Implementations
             };
         }
 
-        public async Task<ContactDto> AddAsync(AddContactRequest request)
+        public async Task<ContactDto> AddAsync(AddContactRequest request, string createdBy)
         {
             var contact = new Contact
             {
                 Fullname = request.Fullname,
                 Email = request.Email,
                 Phone = request.Phone,
-                Address = request.Address
+                Address = request.Address,
+                CreatedBy = createdBy
             };
             var added = await _repository.AddAsync(contact);
 
@@ -93,5 +101,10 @@ namespace ContactAppNLayer.Services.Implementations
         {
             return await _repository.DeleteAsync(id);
         }
+
+        //public Task<ContactDto> AddAsync(AddContactRequest request)
+        //{
+        //    throw new NotImplementedException();
+        //}
     }
 }

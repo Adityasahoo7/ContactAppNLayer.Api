@@ -9,6 +9,8 @@ using System.Threading.Tasks;
 using ContactAppNLayer.Api.Controllers; // Controller class reference
 using ContactAppNLayer.Models.DTOs; // DTO classes
 using ContactAppNLayer.Services.Interfaces; // Service interface reference
+using Microsoft.AspNetCore.Http;
+using System.Security.Claims;
 
 namespace ContactAppNLayer.Api.Tests.Controllers
 {
@@ -29,26 +31,40 @@ namespace ContactAppNLayer.Api.Tests.Controllers
             _controller = new ContactsController(_mockService.Object);
         }
 
-        [Fact] // Unit test mark kare
+        [Fact]
         public async Task GetAll_ReturnsOk_WithContacts()
         {
-            // Arrange: Dummy contact list banauchhu
+            // Arrange
+            var username = "testuser";
+            var role = "User";
+
             var contacts = new List<ContactDto>
+    {
+        new ContactDto { Id = Guid.NewGuid(), Fullname = "A", Email = "a@x.com", Phone = 123, Address = "Addr" }
+    };
+
+            _mockService.Setup(s => s.GetAllAsync(username, role)).ReturnsAsync(contacts);
+
+            // Mock User.Identity and Claims
+            var user = new ClaimsPrincipal(new ClaimsIdentity(new Claim[]
             {
-                new ContactDto { Id = Guid.NewGuid(), Fullname = "A", Email = "a@x.com", Phone = 123, Address = "Addr" }
+        new Claim(ClaimTypes.Name, username),
+        new Claim(ClaimTypes.Role, role)
+            }, "mock"));
+
+            _controller.ControllerContext = new ControllerContext
+            {
+                HttpContext = new DefaultHttpContext { User = user }
             };
 
-            // Mocked service re GetAllAsync call hele ei list return kariba
-            _mockService.Setup(s => s.GetAllAsync()).ReturnsAsync(contacts);
-
-            // Act: Controller ra GetAll method ku call karuchhu
+            // Act
             var result = await _controller.GetAll();
 
-            // Assert: Response ta OkObjectResult type ra hela ki nahi ta check karuchhi
+            // Assert
             var okResult = result as OkObjectResult;
             okResult.Should().NotBeNull();
-            okResult.StatusCode.Should().Be(200); // HTTP 200 expected
-            (okResult.Value as List<ContactDto>)!.Should().HaveCount(1); // 1 contact thiba expected
+            okResult!.StatusCode.Should().Be(200);
+            (okResult.Value as List<ContactDto>)!.Should().HaveCount(1);
         }
 
         [Fact]
@@ -84,20 +100,32 @@ namespace ContactAppNLayer.Api.Tests.Controllers
         [Fact]
         public async Task Add_ReturnsOk_WhenValidRequest()
         {
-            // Arrange: Add request & mock return value set karuchhi
+            // Arrange
+            var username = "testuser";
             var request = new AddContactRequest { Fullname = "New", Email = "new@e.com", Phone = 999, Address = "Xyz" };
             var added = new ContactDto { Id = Guid.NewGuid(), Fullname = request.Fullname };
 
-            _mockService.Setup(s => s.AddAsync(request)).ReturnsAsync(added);
+            _mockService.Setup(s => s.AddAsync(request, username)).ReturnsAsync(added);
+
+            var user = new ClaimsPrincipal(new ClaimsIdentity(new Claim[]
+            {
+        new Claim(ClaimTypes.Name, username)
+            }, "mock"));
+
+            _controller.ControllerContext = new ControllerContext
+            {
+                HttpContext = new DefaultHttpContext { User = user }
+            };
 
             // Act
             var result = await _controller.Add(request);
 
-            // Assert: Ok result and valid object expected
+            // Assert
             var okResult = result as OkObjectResult;
             okResult.Should().NotBeNull();
             okResult!.Value.Should().BeOfType<ContactDto>();
         }
+
 
         [Fact]
         public async Task Update_ReturnsOk_WhenContactExists()

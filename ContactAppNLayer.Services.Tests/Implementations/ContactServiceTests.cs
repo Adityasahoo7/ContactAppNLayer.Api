@@ -32,20 +32,25 @@ namespace ContactAppNLayer.Services.Tests.Implementations
         [Fact]
         public async Task GetAllAsync_WhenContactsExist_ReturnsAllContactDtos()
         {
-            // Arrange: 1 contact fake data dei deluchu
+            // Arrange
             var contacts = new List<Contact>
-            {
-                new Contact { Id = Guid.NewGuid(), Fullname = "Test", Email = "t@e.com", Phone=123, Address="A" }
-            };
-            _mockRepo.Setup(r => r.GetAllAsync()).ReturnsAsync(contacts); // mock setup
+    {
+        new Contact { Id = Guid.NewGuid(), Fullname = "Test", Email = "t@e.com", Phone = 123, Address = "A", CreatedBy = "user1" },
+        new Contact { Id = Guid.NewGuid(), Fullname = "AdminContact", Email = "admin@e.com", Phone = 456, Address = "B", CreatedBy = "admin" }
+    };
 
-            // Act
-            var result = await _service.GetAllAsync();
+            _mockRepo.Setup(r => r.GetAllAsync()).ReturnsAsync(contacts);
 
-            // Assert
-            result.Should().HaveCount(1); // 1 contact asila ki
-            result[0].Fullname.Should().Be("Test"); // naam match karuchhi ki
+            // Act (for Admin)
+            var resultAdmin = await _service.GetAllAsync("admin", "Admin");
+            resultAdmin.Should().HaveCount(2); // Admin sees all
+
+            // Act (for User)
+            var resultUser = await _service.GetAllAsync("user1", "User");
+            resultUser.Should().HaveCount(1); // User sees only own
+            resultUser[0].Fullname.Should().Be("Test");
         }
+
 
         // ✅ Test case: GetByIdAsync — contact exist karile DTO return karuchhi ki
         [Fact]
@@ -82,7 +87,9 @@ namespace ContactAppNLayer.Services.Tests.Implementations
         [Fact]
         public async Task AddAsync_ShouldAddContactAndReturnDto()
         {
-            // Arrange: request DTO set karuchhi
+            // Arrange
+            var createdBy = "testuser"; // Simulate who created it
+
             var req = new AddContactRequest
             {
                 Fullname = "New",
@@ -90,22 +97,23 @@ namespace ContactAppNLayer.Services.Tests.Implementations
                 Phone = 999,
                 Address = "BBSR"
             };
-
-            // Add karapare repository jo return karuthae — contact entity
             var contactEntity = new Contact
             {
                 Id = Guid.NewGuid(),
                 Fullname = req.Fullname,
                 Email = req.Email,
                 Phone = req.Phone,
-                Address = req.Address
+                Address = req.Address,
+                CreatedBy = createdBy
             };
+
             _mockRepo.Setup(r => r.AddAsync(It.IsAny<Contact>())).ReturnsAsync(contactEntity);
 
             // Act
-            var dto = await _service.AddAsync(req);
+            var dto = await _service.AddAsync(req, createdBy); // ✅ Added 'createdBy'
 
             // Assert
+            dto.Should().NotBeNull();
             dto.Fullname.Should().Be(req.Fullname);
             dto.Id.Should().Be(contactEntity.Id);
         }

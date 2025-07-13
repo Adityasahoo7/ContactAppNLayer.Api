@@ -11,9 +11,9 @@ namespace ContactAppNLayer.Services.Interfaces
 {
     public interface IContactService
     {
-        Task<List<ContactDto>> GetAllAsync();
+        Task<List<ContactDto>> GetAllAsync(string username, string role);
         Task<ContactDto?> GetByIdAsync(Guid id);
-        Task<ContactDto> AddAsync(AddContactRequest request);
+        Task<ContactDto> AddAsync(AddContactRequest request,string createdBy);
         Task<ContactDto?> UpdateAsync(Guid id, UpdateContactRequest request);
         Task<bool> DeleteAsync(Guid id);
     }

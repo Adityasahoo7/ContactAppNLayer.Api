@@ -26,6 +26,8 @@ namespace ContactAppNLayer.Models.Entities
         [Required(ErrorMessage = "Address is required")]
         [StringLength(200, ErrorMessage = "Address cannot exceed 200 characters")]
         public string Address { get; set; }
+
+        public string CreatedBy { get; set; }
     }
 }
 
