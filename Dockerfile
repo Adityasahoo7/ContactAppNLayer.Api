@@ -5,8 +5,8 @@ EXPOSE 80
 FROM mcr.microsoft.com/dotnet/sdk:6.0 AS build
 WORKDIR /src
 COPY ["ContactAppNLayer.Api/ContactAppNLayer.Api.csproj", "ContactAppNLayer.Api/"]
-COPY ["ContactApp.DataAccess/ContactApp.DataAccess.csproj", "ContactApp.DataAccess/"]
-COPY ["ContactApp.Models/ContactApp.Models.csproj", "ContactApp.Models/"]
+COPY ["ContactApp.DataAccess/ContactAppNLayer.DataAccess.csproj", "ContactApp.DataAccess/"]
+COPY ["ContactApp.Models/ContactAppNLayer.Models.csproj", "ContactApp.Models/"]
 COPY ["ContactApp.Services/ContactAppNLayer.Services.csproj", "ContactApp.Services/"]
 RUN dotnet restore "ContactAppNLayer.Api/ContactAppNLayer.Api.csproj"
 
