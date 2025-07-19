@@ -7,7 +7,7 @@ WORKDIR /src
 COPY ["ContactAppNLayer.Api/ContactAppNLayer.Api.csproj", "ContactAppNLayer.Api/"]
 COPY ["ContactApp.DataAccess/ContactApp.DataAccess.csproj", "ContactApp.DataAccess/"]
 COPY ["ContactApp.Models/ContactApp.Models.csproj", "ContactApp.Models/"]
-COPY ["ContactApp.Services/ContactApp.Services.csproj", "ContactApp.Services/"]
+COPY ["ContactApp.Services/ContactAppNLayer.Services.csproj", "ContactApp.Services/"]
 RUN dotnet restore "ContactAppNLayer.Api/ContactAppNLayer.Api.csproj"
 
 COPY . .
