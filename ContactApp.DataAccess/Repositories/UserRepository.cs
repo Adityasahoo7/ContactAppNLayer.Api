@@ -23,23 +23,26 @@ namespace ContactAppNLayer.DataAccess.Repositories
 
 
 
-            var user = await _context.Users
-    .FirstOrDefaultAsync(u => u.Username == username &&  password == u.Password);
+            //var user = await _context.Users
+            // .FirstOrDefaultAsync(u => u.Username == username &&  password == u.Password);
+            //U.username data get from DB and username data get from User input 
+            //Using _context.user we connect with db and it is the Dbset
 
-            Console.WriteLine("User Input - Username: " + username);
-            Console.WriteLine("User Input - Password: " + password);
 
-            if (user != null)
+            var user = await _context.Users.FirstOrDefaultAsync(u => u.Username == username);
+
+            if(user != null && user.Password == password)
             {
-                Console.WriteLine("DB Username: " + user.Username);
-                Console.WriteLine("DB Password: " + user.Password);
+                return user;
             }
             else
-            {
-                Console.WriteLine("No matching user found in DB.");
+            {   
+                return null; 
             }
 
-            return user;
+          
+
+           // return user;
 
 
 
