@@ -83,7 +83,7 @@ builder.Services.AddCors(options =>
     options.AddPolicy("AllowAngularApp",
         policy =>
         {
-            policy.WithOrigins("https://contactapp.fwh.is")  // Angular origin
+            policy.WithOrigins("http://localhost:4200")  // Angular origin
                   .AllowAnyHeader()
                   .AllowAnyMethod()
                   .AllowCredentials();
@@ -92,6 +92,7 @@ builder.Services.AddCors(options =>
 
 //"http://localhost:4200",
 
+//https://contactapp.fwh.is
 //Add JWT Authentication
 //builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
 //    .AddJwtBearer(options =>
