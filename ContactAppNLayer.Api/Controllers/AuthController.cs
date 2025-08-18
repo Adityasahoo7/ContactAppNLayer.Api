@@ -9,10 +9,11 @@ namespace ContactAppNLayer.Api.Controllers
     public class AuthController : ControllerBase
     {
         private readonly IAuthService _authService;
-
-        public AuthController(IAuthService authService)
+        private readonly ILogger<AuthController> _logger;
+        public AuthController(IAuthService authService, ILogger<AuthController> logger)
         {
             _authService = authService;
+            _logger = logger;
         }
 
         //  Login API
@@ -20,11 +21,16 @@ namespace ContactAppNLayer.Api.Controllers
         [HttpPost("login")]
         public async Task<IActionResult> Login(LoginRequest request)
         {
+            _logger.LogInformation("Login attempt for user: {Username} at {Time}", request.Username, DateTime.UtcNow);
+
             var result = await _authService.LoginAsync(request);
             // return result == null ? Unauthorized("Invalid credentials") : Ok(result);
 
+           
             if (result == null)
             {
+                _logger.LogWarning("Invalid login for user: {Username} at {Time}", request.Username, DateTime.UtcNow);
+
                 return Unauthorized(new
                 {
                     status = 401,
@@ -33,6 +39,8 @@ namespace ContactAppNLayer.Api.Controllers
             }
             else
             {
+                _logger.LogInformation("Login successful for user: {Username} at {Time}", request.Username, DateTime.UtcNow);
+
                 return Ok(new
                 {
                     status=200,

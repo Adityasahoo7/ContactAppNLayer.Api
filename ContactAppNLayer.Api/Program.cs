@@ -10,6 +10,7 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
 using Microsoft.OpenApi.Models;
+using Serilog;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -146,6 +147,67 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
 
 builder.Services.AddAuthorization();
 
+
+
+
+
+// 🔽 Configure Serilog
+//Log.Logger = new LoggerConfiguration()
+//    .MinimumLevel.Information() // Only Info+ level rakhiba
+//    .Filter.ByExcluding(log => log.Properties.ContainsKey("RequestPath")) // HTTP pipeline logs hataiba
+//    .WriteTo.File(
+//        path: Path.Combine("Logs", $"log-{DateTime.UtcNow:yyyy-MM-dd}.txt"),
+//        rollingInterval: RollingInterval.Day,
+//        retainedFileCountLimit: 30,
+//        outputTemplate: "{Timestamp:yyyy-MM-dd HH:mm:ss} [{Level:u3}] {Message:lj}{NewLine}"
+//    )
+//    .CreateLogger();
+
+//builder.Host.UseSerilog();
+// add services and app pipeline...
+
+// Disable default providers
+builder.Logging.ClearProviders();
+
+Log.Logger = new LoggerConfiguration()
+    .MinimumLevel.Information() // Default minimum level for your logs
+    .MinimumLevel.Override("Microsoft", Serilog.Events.LogEventLevel.Fatal) // Suppress Microsoft logs
+    .MinimumLevel.Override("System", Serilog.Events.LogEventLevel.Fatal)    // Suppress System logs
+    .WriteTo.File(
+        path: Path.Combine("Logs", $"log-.txt"),
+        rollingInterval: RollingInterval.Day,
+        outputTemplate: "{Timestamp:yyyy-MM-dd HH:mm:ss} [{Level:u3}] {Message:lj}{NewLine}",
+        shared: true
+    )
+    .CreateLogger();
+
+builder.Host.UseSerilog();
+
+//Another Method
+
+
+//builder.Host.UseSerilog();
+
+//builder.Logging.ClearProviders();
+
+//var logFolder = Path.Combine(AppContext.BaseDirectory, "Logs");
+//Directory.CreateDirectory(logFolder);
+
+//Log.Logger = new LoggerConfiguration()
+//    .MinimumLevel.Information()
+//    .MinimumLevel.Override("Microsoft", Serilog.Events.LogEventLevel.Warning)
+//    .MinimumLevel.Override("System", Serilog.Events.LogEventLevel.Warning)
+//    .Enrich.FromLogContext()
+//    .WriteTo.File(
+//        path: Path.Combine(logFolder, "log-.txt"),
+//        rollingInterval: RollingInterval.Day,
+//        retainedFileCountLimit: null, // keep all logs
+//        outputTemplate: "{Timestamp:yyyy-MM-dd HH:mm:ss} [{Level:u3}] {Message:lj}{NewLine}{Exception}",
+//        shared: true
+//    )
+//    .CreateLogger();
+
+//builder.Host.UseSerilog();
 
 
 var app = builder.Build();
