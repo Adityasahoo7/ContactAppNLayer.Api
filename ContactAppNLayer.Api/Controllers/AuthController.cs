@@ -23,29 +23,45 @@ namespace ContactAppNLayer.Api.Controllers
         {
             _logger.LogInformation("Login attempt for user: {Username} at {Time}", request.Username, DateTime.UtcNow);
 
-            var result = await _authService.LoginAsync(request);
-            // return result == null ? Unauthorized("Invalid credentials") : Ok(result);
-
-           
-            if (result == null)
+            try
             {
-                _logger.LogWarning("Invalid login for user: {Username} at {Time}", request.Username, DateTime.UtcNow);
 
-                return Unauthorized(new
+
+
+
+                var result = await _authService.LoginAsync(request);
+                // return result == null ? Unauthorized("Invalid credentials") : Ok(result);
+
+
+                if (result == null)
                 {
-                    status = 401,
-                    message="Invalid Username and password"
-                });
+                    _logger.LogWarning("Invalid login for user: {Username} at {Time}", request.Username, DateTime.UtcNow);
+
+                    return Unauthorized(new
+                    {
+                        status = 401,
+                        message = "Invalid Username and password"
+                    });
+                }
+                else
+                {
+                    _logger.LogInformation("Login successful for user: {Username} at {Time}", request.Username, DateTime.UtcNow);
+
+                    return Ok(new
+                    {
+                        status = 200,
+                        message = "Login successfully",
+                        data = result
+                    });
+                }
             }
-            else
+            catch (Exception ex)
             {
-                _logger.LogInformation("Login successful for user: {Username} at {Time}", request.Username, DateTime.UtcNow);
-
-                return Ok(new
+                _logger.LogError(ex, "Error occurred during login for user: {Username} at {Time}", request.Username, DateTime.UtcNow);
+                return StatusCode(500, new
                 {
-                    status=200,
-                    message="Login successfully",
-                    data=result
+                    status = 500,
+                    message = "An error occurred while processing login"
                 });
             }
         }
@@ -53,23 +69,46 @@ namespace ContactAppNLayer.Api.Controllers
         [HttpPost("register")]
         public async Task<IActionResult> Register(RegisterRequest request)
         {
-            var result = await _authService.RegisterAsync(request);
-            //  return result ? Ok("User registered successfully!") : Conflict("Username already exists");
-            if (result)
+            _logger.LogInformation("Registration attempt for user: {Username} at {Time}", request.Username, DateTime.UtcNow);
+
+            try
             {
-                return Ok(new
+
+
+                var result = await _authService.RegisterAsync(request);
+                //  return result ? Ok("User registered successfully!") : Conflict("Username already exists");
+                if (result)
                 {
-                    status = 200,
-                    message = "User registered successfully!"
-                });
+                    _logger.LogInformation("User registered successfully: {Username} at {Time}", request.Username, DateTime.UtcNow);
+
+                    return Ok(new
+                    {
+                        status = 200,
+                        message = "User registered successfully!"
+                    });
+                }
+                else
+                {
+                    _logger.LogWarning("Registration failed - Username already exists: {Username} at {Time}", request.Username, DateTime.UtcNow);
+
+
+                    return Conflict(new
+                    {
+                        status = 409,
+                        message = "Username already exists"
+                    });
+                }
+
             }
-            else
+            catch(Exception ex)
             {
-                return Conflict(new
+                _logger.LogError(ex, "Error occurred during registration for user: {Username} at {Time}", request.Username, DateTime.UtcNow);
+                return StatusCode(500, new
                 {
-                    status = 409,
-                    message = "Username already exists"
+                   status=500,
+                   message="An Error Occure while Processing Registration "
                 });
+
             }
         }
     }

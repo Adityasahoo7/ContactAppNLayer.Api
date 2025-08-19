@@ -14,26 +14,40 @@ using Serilog;
 
 var builder = WebApplication.CreateBuilder(args);
 
+// ---------------- Logging Configure ----------------
+//onfigure Log
+// Disable default providers
+builder.Logging.ClearProviders();
 
-//Make the return type of API is JSON
-//builder.Services.AddControllers()
-//    .AddJsonOptions(options =>
-//    {
-//        options.JsonSerializerOptions.PropertyNamingPolicy = null; // optional
-//    });
+Log.Logger = new LoggerConfiguration()
+    .MinimumLevel.Information() // Default minimum level for your logs
+    .MinimumLevel.Override("Microsoft", Serilog.Events.LogEventLevel.Fatal) // Suppress Microsoft logs
+    .MinimumLevel.Override("System", Serilog.Events.LogEventLevel.Fatal)    // Suppress System logs
+    .WriteTo.File(
+        path: Path.Combine("Logs", $"log-.txt"),
+        rollingInterval: RollingInterval.Day,
+        outputTemplate: "{Timestamp:dd-MM-yyyy HH:mm:ss} [{Level:u3}] {Message:lj}{NewLine}",
+        shared: true
+    )
+    .CreateLogger();
+
+builder.Host.UseSerilog();
+
+Log.Information("🚀 Application starting up...");
 
 
+
+// ---------------- Service Config -------------------------
 
 // 4. Authorization middleware
 builder.Services.AddAuthorization();
 
 // 5. Add controller services
 builder.Services.AddControllers();
+
 // Add services to the container.
-//builder.Services.AddControllers();
-// Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
-//builder.Services.AddSwaggerGen();
+
 builder.Services.AddSwaggerGen(c =>
 {
     c.SwaggerDoc("v1", new OpenApiInfo { Title = "ContactAppNLayer.Api", Version = "v1" });
@@ -66,7 +80,9 @@ builder.Services.AddSwaggerGen(c =>
 });
 
 
-//Dependancy Injection
+
+// ---------------- Dependency Injection ----------------
+
 builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("DbConn"),
     b => b.MigrationsAssembly("ContactAppNLayer.DataAccess")));//This is write to store the migration in Data Access Project 
@@ -78,7 +94,7 @@ builder.Services.AddScoped<IAuthService, AuthService>();
 //This is the Dependancy Injection Performed
 
 
-// Add CORS policy
+// ---------------- CORS ----------------------------
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowAngularApp",
@@ -94,39 +110,8 @@ builder.Services.AddCors(options =>
 //"http://localhost:4200",
 
 //https://contactapp.fwh.is
-//Add JWT Authentication
-//builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
-//    .AddJwtBearer(options =>
-//    {
-//        options.TokenValidationParameters = new TokenValidationParameters
-//        {
-//            ValidateIssuer = true,
-//            ValidateAudience = true,
-//            ValidateLifetime = true,
-//            ValidateIssuerSigningKey = true,
 
-//            ValidIssuer = builder.Configuration["Jwt:Issuer"],
-//            ValidAudience = builder.Configuration["Jwt:Audience"],
-//            IssuerSigningKey = new SymmetricSecurityKey(
-//                Encoding.UTF8.GetBytes(builder.Configuration["Jwt:Key"])),
-
-//            //  Handle token expiration automatically
-//            ClockSkew = TimeSpan.Zero
-//        };
-
-//        //  Add Events to handle token expiry globally (Optional)
-//        options.Events = new JwtBearerEvents
-//        {
-//            OnAuthenticationFailed = context =>
-//            {
-//                if (context.Exception.GetType() == typeof(SecurityTokenExpiredException))
-//                {
-//                    context.Response.Headers.Add("Token-Expired", "true");
-//                }
-//                return Task.CompletedTask;
-//            }
-//        };
-//    });
+// ---------------- JWT Auth -----------------------
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     .AddJwtBearer(options =>
     {
@@ -150,92 +135,47 @@ builder.Services.AddAuthorization();
 
 
 
-
-// 🔽 Configure Serilog
-//Log.Logger = new LoggerConfiguration()
-//    .MinimumLevel.Information() // Only Info+ level rakhiba
-//    .Filter.ByExcluding(log => log.Properties.ContainsKey("RequestPath")) // HTTP pipeline logs hataiba
-//    .WriteTo.File(
-//        path: Path.Combine("Logs", $"log-{DateTime.UtcNow:yyyy-MM-dd}.txt"),
-//        rollingInterval: RollingInterval.Day,
-//        retainedFileCountLimit: 30,
-//        outputTemplate: "{Timestamp:yyyy-MM-dd HH:mm:ss} [{Level:u3}] {Message:lj}{NewLine}"
-//    )
-//    .CreateLogger();
-
-//builder.Host.UseSerilog();
-// add services and app pipeline...
-
-// Disable default providers
-builder.Logging.ClearProviders();
-
-Log.Logger = new LoggerConfiguration()
-    .MinimumLevel.Information() // Default minimum level for your logs
-    .MinimumLevel.Override("Microsoft", Serilog.Events.LogEventLevel.Fatal) // Suppress Microsoft logs
-    .MinimumLevel.Override("System", Serilog.Events.LogEventLevel.Fatal)    // Suppress System logs
-    .WriteTo.File(
-        path: Path.Combine("Logs", $"log-.txt"),
-        rollingInterval: RollingInterval.Day,
-        outputTemplate: "{Timestamp:yyyy-MM-dd HH:mm:ss} [{Level:u3}] {Message:lj}{NewLine}",
-        shared: true
-    )
-    .CreateLogger();
-
-builder.Host.UseSerilog();
-
-//Another Method
-
-
-//builder.Host.UseSerilog();
-
-//builder.Logging.ClearProviders();
-
-//var logFolder = Path.Combine(AppContext.BaseDirectory, "Logs");
-//Directory.CreateDirectory(logFolder);
-
-//Log.Logger = new LoggerConfiguration()
-//    .MinimumLevel.Information()
-//    .MinimumLevel.Override("Microsoft", Serilog.Events.LogEventLevel.Warning)
-//    .MinimumLevel.Override("System", Serilog.Events.LogEventLevel.Warning)
-//    .Enrich.FromLogContext()
-//    .WriteTo.File(
-//        path: Path.Combine(logFolder, "log-.txt"),
-//        rollingInterval: RollingInterval.Day,
-//        retainedFileCountLimit: null, // keep all logs
-//        outputTemplate: "{Timestamp:yyyy-MM-dd HH:mm:ss} [{Level:u3}] {Message:lj}{NewLine}{Exception}",
-//        shared: true
-//    )
-//    .CreateLogger();
-
-//builder.Host.UseSerilog();
-
-
+// ---------------- Build App ----------------
 var app = builder.Build();
 
-// Configure the HTTP request pipeline.
-if (app.Environment.IsDevelopment())
+
+
+try
 {
-    app.UseSwagger();
-    app.UseSwaggerUI();
-    app.UseHttpsRedirection();
+
+    // Configure the HTTP request pipeline.
+    if (app.Environment.IsDevelopment())
+    {
+        Log.Information("🌐 Development environment detected at {Time}", DateTime.UtcNow);
+        app.UseSwagger();
+        app.UseSwaggerUI();
+        app.UseHttpsRedirection();
+    }
+    else
+    {
+        Log.Information("🏭 Production environment detected at {Time}", DateTime.UtcNow);
+    }
+
+
+    // Use the CORS policy
+    app.UseCors("AllowAngularApp");
+
+    app.UseAuthentication();
+
+    app.UseAuthorization();
+
+    app.MapControllers();
+
+    Log.Information("✅ Application configured successfully at {Time}", DateTime.UtcNow);
+
+
+    app.Run();
 }
-
-
-
-
-
-// Use the CORS policy
-app.UseCors("AllowAngularApp");
-
-app.UseAuthentication(); 
-
-
-app.UseAuthorization();
-
-
-
-
-
-app.MapControllers();
-
-app.Run();
+catch(Exception ex)
+{
+    Log.Fatal(ex, "❌ Application terminated unexpectedly at {Time}", DateTime.UtcNow);
+}
+finally
+{
+    Log.CloseAndFlush();
+}
