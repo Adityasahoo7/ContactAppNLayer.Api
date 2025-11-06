@@ -7,6 +7,7 @@ using System.Threading.Tasks;
 using ContactAppNLayer.Api.Controllers;
 using ContactAppNLayer.Services.Interfaces;
 using ContactAppNLayer.Models.DTOs;
+using Microsoft.Extensions.Logging;
 
 namespace ContactAppNLayer.Api.Tests.Controllers
 {
@@ -14,11 +15,12 @@ namespace ContactAppNLayer.Api.Tests.Controllers
     {
         private readonly Mock<IAuthService> _mockAuthService;
         private readonly AuthController _controller;
+        private readonly ILogger<AuthController> _logger;
 
         public AuthControllerTests()
         {
             _mockAuthService = new Mock<IAuthService>();
-            _controller = new AuthController(_mockAuthService.Object);
+            _controller = new AuthController(_mockAuthService.Object,_logger);
         }
 
         [Fact]
