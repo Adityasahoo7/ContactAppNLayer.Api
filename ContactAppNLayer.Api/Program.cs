@@ -11,6 +11,8 @@ using Microsoft.IdentityModel.Tokens;
 using System.Text;
 using Microsoft.OpenApi.Models;
 using Serilog;
+using Azure.Identity;
+using Azure.Security.KeyVault.Secrets;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -81,11 +83,30 @@ builder.Services.AddSwaggerGen(c =>
 
 
 
-// ---------------- Dependency Injection ----------------
 
-builder.Services.AddDbContext<AppDbContext>(options =>
-    options.UseSqlServer(builder.Configuration.GetConnectionString("DbConn"),
-    b => b.MigrationsAssembly("ContactAppNLayer.DataAccess")));//This is write to store the migration in Data Access Project 
+
+//builder.Services.AddDbContext<AppDbContext>(options =>
+//    options.UseSqlServer(builder.Configuration.GetConnectionString("DbConn"),
+//    b => b.MigrationsAssembly("ContactAppNLayer.DataAccess")));//This is write to store the migration in Data Access Project 
+
+
+//-----------------------------KEY VAULT DETAILS -------------------------------
+
+var tenantId = builder.Configuration["connectionstring:TenantId"];
+var clientId = builder.Configuration["connectionstring:ClientId"];
+var clientSecret = builder.Configuration["connectionstring:ClientSecret"];
+var keyVaultUrl = builder.Configuration["Keyvault:KeyVaultUrl"];
+
+var credential = new ClientSecretCredential(tenantId, clientId, clientSecret);
+
+var client = new SecretClient(new Uri(keyVaultUrl), credential);
+var secret = client.GetSecret("contactappconnectionstring");
+Console.WriteLine($"Database Connection: {secret.Value.Value}");
+builder.Services.AddDbContext<AppDbContext>(opt =>
+opt.UseSqlServer(secret.Value.Value));
+
+
+// ---------------- Dependency Injection ----------------
 
 builder.Services.AddScoped<IContactRepository, ContactRepository>();
 builder.Services.AddScoped<IContactService, ContactService>();
