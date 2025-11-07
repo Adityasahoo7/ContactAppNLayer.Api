@@ -3,37 +3,32 @@ name: Deploy .NET App to Azure Web App
 on:
   push:
     branches:
-      - main  # or your deployment branch name
+      - main
 
 jobs:
-  build:
+  build-and-deploy:
     runs-on: ubuntu-latest
-
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v3
 
       - name: Setup .NET
-        uses: actions/setup-dotnet@v4
+        uses: actions/setup-dotnet@v3
         with:
-          dotnet-version: '8.0.x'  # your .NET version
+          dotnet-version: '8.0.x'  # Use your target version (check .csproj)
 
-      - name: Restore dependencies (API only)
+      - name: Restore dependencies
         run: dotnet restore ./ContactAppNLayer.Api/ContactAppNLayer.Api.csproj
 
-      - name: Build API project only
+      - name: Build project
         run: dotnet build ./ContactAppNLayer.Api/ContactAppNLayer.Api.csproj --configuration Release --no-restore
 
-      - name: Publish API project only
+      - name: Publish project
         run: dotnet publish ./ContactAppNLayer.Api/ContactAppNLayer.Api.csproj -c Release -o ./publish
 
-      - name: Login to Azure
-        uses: azure/login@v2
-        with:
-          creds: ${{ secrets.AZURE_CREDENTIALS }}
-
       - name: Deploy to Azure Web App
-        uses: azure/webapps-deploy@v2
+        uses: azure/webapps-deploy@v3
         with:
-          app-name: 'contactAppapi'   # change to your actual Azure Web App name
+          app-name: 'contactAppapi'   # Your Azure Web App name
+          publish-profile: ${{ secrets.AZUREAPPSERVICE_PUBLISHPROFILE }}
           package: ./publish
