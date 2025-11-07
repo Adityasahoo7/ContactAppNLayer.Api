@@ -5,10 +5,7 @@
 
 
 
-# Ignore config and build files
-bin/
-obj/
-ContactAppNLayer.Api/appsettings.json
+
 
 
 
